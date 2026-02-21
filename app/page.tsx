@@ -1107,7 +1107,7 @@ export default function Portfolio() {
                     Currently, I focus on building <span className="text-cyan-400">secure, scalable applications</span> using modern frameworks like React, Node.js, and Laravel, ensuring operational efficiency and superior user experience.
                   </p>
                   <div className="flex flex-wrap gap-3 mt-8">
-                    {['Network Security', 'Web Development', 'System Admin', 'Mobile Apps'].map((tag) => (
+                    {['Network Security', 'Web Development', 'System Admin', 'Mobile Apps', 'AI Development'].map((tag) => (
                       <span key={tag} className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/5 text-sm">
                         <Shield size={14} className="text-cyan-500" /> {tag}
                       </span>
