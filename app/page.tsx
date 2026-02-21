@@ -12,7 +12,7 @@ import {
   Smartphone, Router, Shield, Terminal, MapPin, ArrowRight, Zap, ExternalLink,
   Play, X, Maximize2, Minimize2, Monitor, Smartphone as PhoneIcon, Globe,
   Eye, Code2, Database, Cpu, Layers, Cloud, Sparkles,
-  Phone
+  Phone, CheckCircle, AlertCircle
 } from 'lucide-react';
 
 // --- SIMPLIFIED THREE.JS COMPONENTS (Fixed for hydration) ---
@@ -66,6 +66,166 @@ function ThreeBackground() {
         <ambientLight intensity={0.5} />
       </Canvas>
     </div>
+  );
+}
+
+// --- CONTACT FORM COMPONENT ---
+function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [status, setStatus] = useState('idle'); // 'idle', 'loading', 'success', 'error'
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    setErrorMessage('');
+
+    try {
+      // Using Formspree to send email to emmadom148@gmail.com
+      // Replace 'YOUR_FORMSPREE_FORM_ID' with your actual Formspree form ID
+      const response = await fetch('https://formspree.io/f/meekzovp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          _subject: `New Contact Form Message from ${formData.name}`,
+          _replyto: formData.email
+        }),
+      });
+      
+      if (response.ok) {
+        setStatus('success');
+        setFormData({ name: '', email: '', message: '' });
+        
+        // Reset success message after 5 seconds
+        setTimeout(() => {
+          setStatus('idle');
+        }, 5000);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
+      }
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(error.message || 'Something went wrong. Please try again.');
+      console.error('Contact form error:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-mono text-cyan-400">NAME</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            minLength={2}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors placeholder-gray-500"
+            placeholder="Your Name"
+            disabled={status === 'loading'}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-mono text-cyan-400">EMAIL</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors placeholder-gray-500"
+            placeholder="you@company.com"
+            disabled={status === 'loading'}
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-mono text-cyan-400">MESSAGE</label>
+        <textarea
+          rows={4}
+          name="message"
+          value={formData.message}
+          onChange={handleChange}
+          required
+          minLength={10}
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors placeholder-gray-500"
+          placeholder="How can I help you?"
+          disabled={status === 'loading'}
+        />
+      </div>
+      
+      {/* Status Messages */}
+      {status === 'success' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm flex items-center gap-3"
+        >
+          <CheckCircle className="w-5 h-5" />
+          <div>
+            <p className="font-semibold">Message sent successfully!</p>
+            <p className="text-green-300/70">I'll get back to you within 24 hours.</p>
+          </div>
+        </motion.div>
+      )}
+      
+      {status === 'error' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3"
+        >
+          <AlertCircle className="w-5 h-5" />
+          <div>
+            <p className="font-semibold">Failed to send message</p>
+            <p className="text-red-300/70">{errorMessage}</p>
+          </div>
+        </motion.div>
+      )}
+      
+      <button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg font-bold text-white hover:shadow-lg hover:shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+      >
+        {status === 'loading' ? (
+          <>
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            SENDING...
+          </>
+        ) : (
+          <>
+            SEND MESSAGE
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </>
+        )}
+      </button>
+      
+      <div className="text-xs text-gray-500 text-center pt-2">
+        <p>Messages will be sent directly to emmadom148@gmail.com</p>
+      </div>
+    </form>
   );
 }
 
@@ -237,7 +397,7 @@ function ProjectMockupCarousel() {
         tablet: "/taximage.png",
         mobile: "/taximage.png"
       },
-      tech: ['Laravel', 'MySQL', 'Tailwind', 'Livewire'],
+      tech: ['Laravel', 'MySQL', 'Tailwind', 'PHP'],
       features: ['Real-time Dashboards', 'Role-based Access', 'Secure Transactions'],
       color: "from-cyan-500 to-blue-600"
     },
@@ -250,27 +410,27 @@ function ProjectMockupCarousel() {
         tablet: "/adomCam.png",
         mobile: "/adomCam.png"
       },
-      tech: ['Python', 'TensorFlow', 'OpenCV', 'PyQt5'],
+      tech: ['Python', 'TensorFlow', 'OpenCV', 'PyQt5', 'YOLOv5'],
       features: ['Face Recognition', 'Real-time Alerts', 'Offline Operation'],
       color: "from-purple-500 to-pink-600"
     },
     {
       id: 3,
       title: "Military Inventory System",
-      description: "Secure military asset tracking and management system (IN PRODUCTION)",
+      description: "Secure military asset tracking and management system",
       screenshots: {
         desktop: "/GM.png",
         tablet: "/GM.png",
         mobile: "/GM.png"
       },
-      tech: ['Laravel', 'PHP', 'JavaScript', 'Bootstrap'],
+      tech: ['Laravel', 'PHP', 'JavaScript', 'Bootstrap','Mysql'],
       features: ['Asset Tracking', 'Maintenance Scheduling', 'Secure Access'],
       color: "from-green-500 to-emerald-600"
     },
     {
       id: 4,
       title: "TowFlow Platform",
-      description: "Vehicle towing and water delivery service platform (UNDERGOING DEVELOPMENT)",
+      description: "Vehicle towing and water delivery service platform",
       screenshots: {
         desktop: "/mobile.png",
         tablet: "/mobile.png",
@@ -283,7 +443,7 @@ function ProjectMockupCarousel() {
     {
       id: 5,
       title: "ChurchStream",
-      description: "A church streaming app that streams ongoing live feed on multiple social media at the sametime (UNDERGOING DEVELOPMENT)",
+      description: "A church streaming app that streams ongoing live feed on multiple social media at the sametime",
       screenshots: {
         desktop: "/electron.png",
         tablet: "/electron.png",
@@ -291,6 +451,25 @@ function ProjectMockupCarousel() {
       },
       tech: ['Electron', 'Node.js'],
       features: ['Multiple feeds, Multiple Streaming', 'Edit live feeds'],
+      color: "from-orange-500 to-red-600"
+    },
+    {
+      id: 6,
+      title: "The Church of Christ (SM) Website",
+      description: "A church web platform built with Django that provides a digital church library, interactive online Bible games, church location map, podcast streaming, and multi-platform live streaming integration.",
+      screenshots: {
+        desktop: "/church.png",
+        tablet: "/church.png",
+        mobile: "/church.png"
+      },
+      tech: ['Python', 'Django', 'JavaScript', 'HTML', 'CSS', 'Tailwind CSS'],
+      features: [
+        'Digital Church Library',
+        'Online Bible Games',
+        'Interactive Church Map',
+        'Podcast Streaming',
+               
+      ],
       color: "from-orange-500 to-red-600"
     }
   ];
@@ -982,7 +1161,7 @@ export default function Portfolio() {
                 {
                   title: 'Frontend',
                   icon: <Code />,
-                  skills: ['React', 'TypeScript', 'JavaScript', 'Bootstrap', 'HTML/CSS']
+                  skills: ['React', 'TypeScript', 'JavaScript', 'Bootstrap', 'HTML/CSS/TailwindCSS']
                 },
                 {
                   title: 'Backend',
@@ -992,7 +1171,7 @@ export default function Portfolio() {
                 {
                   title: 'Mobile & App',
                   icon: <Smartphone />,
-                  skills: ['Java', 'Android Studio', 'Mobile Dev', 'PyQt5 (Desktop)']
+                  skills: ['Java', 'Android Studio', 'Mobile Dev', 'PyQt5 (Desktop)', 'React Native']
                 },
                 {
                   title: 'Infrastructure',
@@ -1036,44 +1215,26 @@ export default function Portfolio() {
             </p>
             
             <SpotlightCard className="rounded-3xl p-8 md:p-12 bg-black/50 backdrop-blur-md inline-block w-full max-w-2xl text-left">
-               <form className="space-y-6">
-                 <div className="grid md:grid-cols-2 gap-6">
-                   <div className="space-y-2">
-                     <label className="text-sm font-mono text-cyan-400">NAME</label>
-                     <input type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="Your Name" />
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-sm font-mono text-cyan-400">EMAIL</label>
-                     <input type="email" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="you@company.com" />
-                   </div>
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-sm font-mono text-cyan-400">MESSAGE</label>
-                   <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="How can I help you?" />
-                 </div>
-                 <button className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg font-bold text-white hover:shadow-lg hover:shadow-cyan-500/20 transition-all">
-                   SEND MESSAGE
-                 </button>
-               </form>
-
-               <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-8">
-                 {[
-                   { icon: <Mail size={20} />, text: 'emmadom148@gmail.com', href: 'mailto:emmadom148@gmail.com' },
-                   { icon: <Github size={20} />, text: 'github.com/qwame2', href: 'https://github.com/qwame2' },
-                   { icon: <MapPin size={20} />, text: 'Accra, Ghana', href: '#' },
-                   { icon: <Smartphone size={20} />, text: '+233 554131837', href: '#' }
-                 ].map((link, i) => (
-                   <a 
-                     key={i} 
-                     href={link.href}
-                     className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                     target={link.href.startsWith('http') ? '_blank' : undefined}
-                     rel={link.href.startsWith('http') ? 'noreferrer' : undefined}
-                   >
-                     {link.icon} <span className="text-sm font-mono">{link.text}</span>
-                   </a>
-                 ))}
-               </div>
+              <ContactForm />
+              
+              <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-8">
+                {[
+                  { icon: <Mail size={20} />, text: 'emmadom148@gmail.com', href: 'mailto:emmadom148@gmail.com' },
+                  { icon: <Github size={20} />, text: 'github.com/qwame2', href: 'https://github.com/qwame2' },
+                  { icon: <MapPin size={20} />, text: 'Accra, Ghana', href: '#' },
+                  { icon: <Smartphone size={20} />, text: '+233 554131837', href: '#' }
+                ].map((link, i) => (
+                  <a 
+                    key={i} 
+                    href={link.href}
+                    className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    target={link.href.startsWith('http') ? '_blank' : undefined}
+                    rel={link.href.startsWith('http') ? 'noreferrer' : undefined}
+                  >
+                    {link.icon} <span className="text-sm font-mono">{link.text}</span>
+                  </a>
+                ))}
+              </div>
             </SpotlightCard>
           </div>
         </section>
